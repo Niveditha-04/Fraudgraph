@@ -1,0 +1,92 @@
+[
+  {
+    "case_id": 0,
+    "node_idx": 704774,
+    "ground_truth": "licit",
+    "hybrid_score": 0.3674025555423013,
+    "status": "auto_finalized",
+    "consensus_verdict": "licit",
+    "triggered_human_review": false
+  },
+  {
+    "case_id": 1,
+    "node_idx": 533751,
+    "ground_truth": "licit",
+    "hybrid_score": 0.5257968734909876,
+    "status": "human_resolved",
+    "consensus_verdict": "uncertain",
+    "triggered_human_review": true
+  },
+  {
+    "case_id": 2,
+    "node_idx": 572167,
+    "ground_truth": "illicit",
+    "hybrid_score": 0.07427890975721502,
+    "status": "auto_finalized",
+    "consensus_verdict": "licit",
+    "triggered_human_review": false
+  },
+  {
+    "case_id": 3,
+    "node_idx": 488311,
+    "ground_truth": "licit",
+    "hybrid_score": 0.6979269858042487,
+    "status": "human_resolved",
+    "consensus_verdict": "uncertain",
+    "triggered_human_review": true
+  },
+  {
+    "case_id": 4,
+    "node_idx": 581054,
+    "ground_truth": "licit",
+    "hybrid_score": 0.0017259769238411825,
+    "status": "auto_finalized",
+    "consensus_verdict": "licit",
+    "triggered_human_review": false
+  },
+  {
+    "case_id": 5,
+    "node_idx": 286169,
+    "ground_truth": "illicit",
+    "hybrid_score": 0.9999999880790711,
+    "status": "human_resolved",
+    "consensus_verdict": "uncertain",
+    "triggered_human_review": true
+  },
+  {
+    "case_id": 6,
+    "node_idx": 575619,
+    "ground_truth": "licit",
+    "hybrid_score": 0.265642238776861,
+    "status": "auto_finalized",
+    "consensus_verdict": "licit",
+    "triggered_human_review": false
+  },
+  {
+    "case_id": 7,
+    "node_idx": 299334,
+    "ground_truth": "licit",
+    "hybrid_score": 0.9989884972572327,
+    "status": "human_resolved",
+    "consensus_verdict": "uncertain",
+    "triggered_human_review": true
+  },
+  {
+    "case_id": 8,
+    "node_idx": 230145,
+    "ground_truth": "illicit",
+    "hybrid_score": 0.8665567108063645,
+    "status": "human_resolved",
+    "consensus_verdict": "uncertain",
+    "triggered_human_review": true
+  },
+  {
+    "case_id": 9,
+    "node_idx": 126200,
+    "ground_truth": "licit",
+    "hybrid_score": 0.8436945978813046,
+    "status": "human_resolved",
+    "consensus_verdict": "licit",
+    "triggered_human_review": true
+  }
+]

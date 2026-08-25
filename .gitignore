@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+data/elliptic/
+data/elliptic_pp/
+chroma_db/
+*.pt
+*.pth
+.env

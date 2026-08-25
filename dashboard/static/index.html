@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FraudGraph — Investigation Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+    --illicit: #e53935; --licit: #4caf50; --uncertain: #ffb300; --accent: #58a6ff;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; }
+  header { padding: 20px 28px; border-bottom: 1px solid var(--border); }
+  header h1 { margin: 0; font-size: 20px; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 70px); }
+  .case-list { border-right: 1px solid var(--border); padding: 12px; overflow-y: auto; }
+  .case-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; border: 1px solid transparent; }
+  .case-item:hover { background: var(--panel); }
+  .case-item.active { background: var(--panel); border-color: var(--accent); }
+  .case-item .row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .badge.illicit { background: rgba(229,57,53,0.15); color: var(--illicit); }
+  .badge.licit { background: rgba(76,175,80,0.15); color: var(--licit); }
+  .badge.uncertain { background: rgba(255,179,0,0.15); color: var(--uncertain); }
+  .detail { padding: 24px 32px; overflow-y: auto; }
+  .score-row { display: flex; gap: 16px; margin-bottom: 20px; }
+  .score-tile { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; flex: 1; }
+  .score-tile .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .score-tile .value { font-size: 22px; font-weight: 700; }
+  .personas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .persona-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .persona-card .name { font-size: 12px; color: var(--muted); text-transform: capitalize; margin-bottom: 6px; }
+  .persona-card .reasoning { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .status-banner { padding: 10px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; }
+  .status-banner.human { background: rgba(255,179,0,0.12); color: var(--uncertain); border: 1px solid rgba(255,179,0,0.3); }
+  .status-banner.auto { background: rgba(76,175,80,0.12); color: var(--licit); border: 1px solid rgba(76,175,80,0.3); }
+  .memo { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; white-space: pre-wrap; font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; }
+  iframe { width: 100%; height: 440px; border: 1px solid var(--border); border-radius: 10px; }
+  h3 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 10px; }
+  .empty { color: var(--muted); padding: 40px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FraudGraph — Investigation Dashboard</h1>
+  <p>GNN + agentic AML investigation demo · showing 10 cached test cases from the Phase 6 gate run</p>
+</header>
+<div class="layout">
+  <div class="case-list" id="case-list"></div>
+  <div class="detail" id="detail"><div class="empty">Select a case on the left</div></div>
+</div>
+
+<script>
+async function loadCases() {
+  const res = await fetch('data/cases.json');
+  const cases = await res.json();
+  const list = document.getElementById('case-list');
+  list.innerHTML = '';
+  cases.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'case-item';
+    div.id = `case-item-${c.case_id}`;
+    div.onclick = () => selectCase(c.case_id);
+    div.innerHTML = `
+      <div class="row">
+        <strong>Case ${c.case_id}</strong>
+        <span class="badge ${c.consensus_verdict}">${c.consensus_verdict}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+        node ${c.node_idx} · hybrid ${c.hybrid_score.toFixed(3)} · gt: ${c.ground_truth}
+        ${c.triggered_human_review ? ' · 👤 human-reviewed' : ''}
+      </div>`;
+    list.appendChild(div);
+  });
+  if (cases.length) selectCase(cases[0].case_id);
+}
+
+async function selectCase(caseId) {
+  document.querySelectorAll('.case-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`case-item-${caseId}`)?.classList.add('active');
+
+  const res = await fetch(`data/case_${caseId}.json`);
+  const c = await res.json();
+  const detail = document.getElementById('detail');
+
+  const statusClass = c.triggered_human_review ? 'human' : 'auto';
+  const statusText = c.triggered_human_review
+    ? '👤 Panel disagreed — routed to human review, then resolved'
+    : '✓ Panel reached unanimous consensus — auto-finalized';
+
+  const personaCards = c.persona_results.map(p => `
+    <div class="persona-card">
+      <div class="name">${p.persona.replace(/_/g, ' ')}</div>
+      <span class="badge ${p.verdict}">${p.verdict}</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:6px;">conf ${p.confidence.toFixed(2)}</span>
+      <div class="reasoning">${p.reasoning}</div>
+    </div>`).join('');
+
+  detail.innerHTML = `
+    <div class="status-banner ${statusClass}">${statusText}</div>
+    <div class="score-row">
+      <div class="score-tile"><div class="label">Hybrid Score</div><div class="value">${c.hybrid_score.toFixed(3)}</div></div>
+      <div class="score-tile"><div class="label">GNN Score</div><div class="value">${c.gnn_score.toFixed(3)}</div></div>
+      <div class="score-tile"><div class="label">Benford MAD</div><div class="value">${c.benford_score.toFixed(3)}</div></div>
+      <div class="score-tile"><div class="label">Ground Truth</div><div class="value"><span class="badge ${c.ground_truth}">${c.ground_truth}</span></div></div>
+    </div>
+    <h3>Persona Panel</h3>
+    <div class="personas">${personaCards}</div>
+    <h3>Investigation Memo</h3>
+    <div class="memo">${c.memo}</div>
+    <h3>Wallet Subgraph</h3>
+    <iframe src="graphs/case_${c.case_id}.html"></iframe>
+  `;
+}
+
+loadCases();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "case_id": 4,
+  "node_idx": 581054,
+  "ground_truth": "licit",
+  "hybrid_score": 0.0017259769238411825,
+  "gnn_score": 3.7384364267450954e-13,
+  "benford_score": 0.03390641637878523,
+  "evidence_summary": "Wallet case #581054\n- GNN (GraphSAGE) illicit-probability score: 0.000 (0=licit-like, 1=illicit-like; model trained on labeled Elliptic++ wallets, temporal holdout test AUC-PR 0.428)\n- Benford's Law deviation score (MAD): 0.0339 (0=amounts closely follow Benford's Law's expected first-digit distribution; higher = more deviation from natural transaction amounts)\n- Combined hybrid score: 0.002 (0.7*GNN + 0.3*Benford, both normalized 0-1)\n\nWallet activity summary:\n- total transactions: 12 (as sender: 6, as receiver: 6)\n- active over 8 distinct time steps, lifetime 94753 blocks\n- BTC transacted: total=0.7685, mean=0.0640, median=0.0368\n- BTC sent: total=0.4756, BTC received: total=0.2929\n- fees paid: total=0.046589",
+  "persona_results": [
+    {
+      "persona": "compliance_officer",
+      "verdict": "licit",
+      "confidence": 0.92,
+      "reasoning": "The GNN model assigns a near-zero illicit probability (0.000), and the Benford's Law deviation (0.0339) is minimal, indicating transaction amounts follow natural distribution patterns. The combined hybrid score of 0.002 is well below any reasonable illicit threshold. The wallet shows modest, consistent activity (12 transactions over ~94k blocks, ~0.77 BTC total) with balanced send/receive patterns and reasonable fee behavior\u2014all consistent with ordinary retail or small-business usage rather than structured evasion or illicit layering."
+    },
+    {
+      "persona": "aml_analyst",
+      "verdict": "licit",
+      "confidence": 0.88,
+      "reasoning": "The GNN model score of 0.000 is strongly indicative of licit behavior, and the Benford's Law deviation (0.0339) is minimal, suggesting transaction amounts follow natural patterns rather than deliberate structuring. The wallet shows modest, balanced activity (12 transactions over ~94k blocks, ~0.77 BTC total) with reasonable fee discipline (0.047 BTC in fees). The combined hybrid score of 0.002 reflects very low risk. While the GNN model's AUC-PR of 0.428 is weak, the 0.000 score here is at the extreme licit end of the distribution, and the absence of red-flag typologies (no evidence of mixing, layering, or exchange-hopping) supports a licit classification."
+    },
+    {
+      "persona": "skeptic",
+      "verdict": "licit",
+      "confidence": 0.92,
+      "reasoning": "The GNN model assigns a near-zero illicit probability (0.000), and the Benford's Law deviation (0.0339) is minimal\u2014well within normal range for legitimate small-volume wallets. The combined hybrid score of 0.002 is extremely low. The wallet shows modest, consistent activity (12 transactions over ~94k blocks, ~0.77 BTC total) with reasonable fee discipline (6% fee ratio), consistent with a small retail holder or participant rather than any illicit pattern. No red flags present."
+    }
+  ],
+  "status": "auto_finalized",
+  "consensus_verdict": "licit",
+  "triggered_human_review": false,
+  "memo": "# INVESTIGATION MEMO\n\n**Case:** Wallet #581054\n**Verdict:** LICIT (Consensus confidence: ~0.91 average across panel)\n\n## 1. Summary\n\nWallet #581054 was reviewed by the automated risk pipeline and a three-persona review panel (compliance officer, AML analyst, skeptic). All three personas independently reached a **licit** classification with high confidence (0.88\u20130.92). The wallet reflects modest, low-volume Bitcoin activity consistent with retail or small-business use, with no structural, statistical, or behavioral indicators of laundering, layering, or obfuscation.\n\n## 2. Supporting Evidence\n\nThe quantitative risk signals are uniformly low-risk:\n\n- **GNN illicit-probability score: 0.000** \u2014 the GraphSAGE model, trained on labeled Elliptic++ wallets, places this wallet at the extreme licit end of its output distribution (note: model AUC-PR of 0.428 indicates moderate discriminative power, so this score is treated as supportive rather than dispositive).\n- **Benford's Law deviation (MAD): 0.0339** \u2014 very low deviation, indicating transaction amounts follow naturally occurring distributions rather than artificially structured/rounded figures often seen in layering schemes.\n- **Combined hybrid score: 0.002** \u2014 far below any reasonable illicit threshold.\n- **Behavioral profile:** 12 total transactions (6 sent/6 received) over 8 distinct time steps spanning ~94,753 blocks; total volume of only 0.7685 BTC (mean 0.064, median 0.037); balanced send/receive flow (0.4756 sent vs. 0.2929 received); reasonable fee ratio (~6%, 0.0466 BTC total).\n\nThis pattern \u2014 low transaction count, long dwell time, balanced bidirectional flow, natural amount distribution, and unremarkable fee behavior \u2014 is inconsistent with rapid layering, mixing, or exchange-hopping typologies.\n\n## 3. Typology Assessment\n\nNo FATF or FinCEN red-flag typology is matched. The reference case study on decentralized wallet abuse for drug-trafficking proceeds [FATF_Virtual_Assets_Red_Flag_Indicators.pdf p13] involves rapid conversion cycles between fiat and VA, use of anonymous exchanger accounts,"
+}

@@ -1,0 +1,15 @@
+{
+  "n_nodes_total": 822942,
+  "n_nodes_benford_scorable": 822920,
+  "n_test_nodes_both_scores": 70487,
+  "gnn_test_auc_pr": 0.4282687517406001,
+  "pearson_correlation": 0.04162481800497414,
+  "pearson_p_value": 2.0565754843699494e-28,
+  "hybrid_weight_gnn": 0.7,
+  "hybrid_weight_benford": 0.3,
+  "benford_score_stats": {
+    "min": 0.02005504466216221,
+    "max": 0.2120538909865166,
+    "mean": 0.1640678563319993
+  }
+}

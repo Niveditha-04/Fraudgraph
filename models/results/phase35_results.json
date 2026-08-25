@@ -1,0 +1,45 @@
+{
+  "seed": 42,
+  "dataset": "elliptic_pp_wallet_graph",
+  "baseline": {
+    "precision": 0.06381008902077151,
+    "recall": 0.8487527628670666,
+    "auc_pr": 0.12633842231904727,
+    "n_pos": 3167,
+    "n_total": 70490
+  },
+  "graphsage": {
+    "val": {
+      "precision": 0.10589599609375,
+      "recall": 0.9796725014116319,
+      "auc_pr": 0.7098030092386246,
+      "n_pos": 1771,
+      "n_total": 24460
+    },
+    "test": {
+      "precision": 0.09604887731050737,
+      "recall": 0.9778970634670034,
+      "auc_pr": 0.4282687517406001,
+      "n_pos": 3167,
+      "n_total": 70490
+    }
+  },
+  "gat": {
+    "val": {
+      "precision": 0.10682779456193353,
+      "recall": 0.4991530208921513,
+      "auc_pr": 0.1365359820511824,
+      "n_pos": 1771,
+      "n_total": 24460
+    },
+    "test": {
+      "precision": 0.15443484005946154,
+      "recall": 0.8856962425007894,
+      "auc_pr": 0.361541129573752,
+      "n_pos": 3167,
+      "n_total": 70490
+    }
+  },
+  "best_gnn": "GraphSAGE",
+  "gate_pass": true
+}

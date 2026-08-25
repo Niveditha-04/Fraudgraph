@@ -1,0 +1,33 @@
+{
+  "case_id": 5,
+  "node_idx": 286169,
+  "ground_truth": "illicit",
+  "hybrid_score": 0.9999999880790711,
+  "gnn_score": 0.9999994039535522,
+  "benford_score": 0.2120538909865166,
+  "evidence_summary": "Wallet case #286169\n- GNN (GraphSAGE) illicit-probability score: 1.000 (0=licit-like, 1=illicit-like; model trained on labeled Elliptic++ wallets, temporal holdout test AUC-PR 0.428)\n- Benford's Law deviation score (MAD): 0.2121 (0=amounts closely follow Benford's Law's expected first-digit distribution; higher = more deviation from natural transaction amounts)\n- Combined hybrid score: 1.000 (0.7*GNN + 0.3*Benford, both normalized 0-1)\n\nWallet activity summary:\n- total transactions: 1 (as sender: 1, as receiver: 0)\n- active over 1 distinct time steps, lifetime 0 blocks\n- BTC transacted: total=0.0950, mean=0.0950, median=0.0950\n- BTC sent: total=0.0950, BTC received: total=0.0000\n- fees paid: total=0.285129",
+  "persona_results": [
+    {
+      "persona": "aml_analyst",
+      "verdict": "uncertain",
+      "confidence": 0.25,
+      "reasoning": "While the GNN model assigns a perfect 1.0 illicit score, this must be heavily discounted given the model's poor real-world performance (AUC-PR 0.428 on temporal holdout\u2014barely better than random). The wallet shows only a single outbound transaction of 0.0950 BTC with no receiving activity, which is insufficient to establish a coherent illicit pattern (layering, structuring, or mixing). The Benford's Law deviation (0.2121) is moderate and expected for small sample sizes (n=1). A single transaction with no graph-neighborhood context or behavioral typology evidence cannot reliably indicate illicit activity; this appears to be a new or dormant wallet rather than active money laundering."
+    },
+    {
+      "persona": "compliance_officer",
+      "verdict": "uncertain",
+      "confidence": 0.35,
+      "reasoning": "The GNN model's perfect 1.000 illicit score is undermined by its poor calibration (AUC-PR 0.428, barely above random), suggesting the model is unreliable for individual case decisions. The Benford's Law deviation (0.2121) is moderate and expected for small transaction volumes. Most critically, the wallet shows only a single 0.095 BTC transaction with no receiving activity\u2014insufficient behavioral data to establish illicit patterns. While the hybrid score flags concern, the evidence is too thin and model-dependent to justify SAR filing without additional corroborating indicators (source/destination analysis, temporal clustering, known illicit addresses)."
+    },
+    {
+      "persona": "skeptic",
+      "verdict": "licit",
+      "confidence": 0.85,
+      "reasoning": "This is a classic false-positive case. The wallet has only 1 transaction ever, making all statistical signals unreliable: a single transaction cannot meaningfully deviate from Benford's Law (MAD=0.2121 is noise on n=1), and the GNN score of 1.0 likely reflects the model's poor calibration on minimal-activity wallets (note the AUC-PR of 0.428, barely better than random). The activity pattern\u2014one small outbound transfer of 0.095 BTC with reasonable fees (0.285129 BTC is ~3x the amount, high but not impossible for urgent/priority transactions)\u2014is consistent with a normal user making a single withdrawal or transfer. No illicit pattern is evident."
+    }
+  ],
+  "status": "human_resolved",
+  "consensus_verdict": "uncertain",
+  "triggered_human_review": true,
+  "memo": "# Investigation Memo: Wallet Case #286169\n\n## 1. Case Summary and Verdict\n\nWallet #286169 was flagged by an automated hybrid detection system with a maximum illicit-probability score (1.000 combined; GNN component 1.000, Benford's Law deviation 0.2121). Following panel review, individual analysts returned mixed assessments (uncertain/uncertain/licit), with confidence levels ranging from 0.25 to 0.85. A human reviewer overrode the panel disagreement and issued a final consensus verdict of **uncertain**, reflecting the tension between an alarming model score and genuinely thin behavioral evidence.\n\n## 2. Evidence Assessment\n\nThe case rests on a single outbound transaction of 0.0950 BTC, with zero receiving activity, active for only one time step. This minimal activity profile undermines confidence in both scoring components: the Benford's Law deviation metric is statistically meaningless on a sample size of one, and the GNN model \u2014 while assigning a perfect score \u2014 carries a temporal holdout AUC-PR of only 0.428, indicating performance barely above a random baseline and known unreliability on low-activity/dormant wallets. One notable anomaly worth flagging independently of the model score: fees paid (0.285129 BTC) are roughly 3x the transaction value itself, an unusual fee-to-amount ratio that warrants isolated scrutiny regardless of the GNN/Benford findings. Taken together, the evidence is too sparse to confirm a coherent illicit typology (e.g., layering, structuring, mixing), but also too anomalous (extreme fee ratio, maximal model score) to dismiss outright as a false positive.\n\n## 3. Typology Pattern Match\n\nThe wallet's profile does not cleanly match an established red-flag typology. It lacks the receiving/converting/withdrawing cycle described in FATF's decentralized wallet case study, where illicit funds move through conversion and reconversion stages between fiat and VA [FATF_Virtual_Assets_Red_Flag_Indicators.pdf p13]. There is no evidence of P2P exchanger use, kiosk activity, or darknet-linked flows referenced in FinCEN's advisory on CVC illicit financing typologies [FinCEN_Advisory_CVC_Illicit_Activity_2019.pdf p0]. The single send-only transaction pattern also does not match"
+}
