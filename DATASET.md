@@ -13,9 +13,9 @@ This project uses two real, public datasets of actual Bitcoin transactions. Neit
 - **Licit** (about 42,019 transactions, ~21%): things like legitimate exchanges, wallet providers, mining pools, legal services.
 - **Unknown** (the remaining ~77%): Elliptic didn't have enough information to label these one way or the other — this is normal in real-world data, not a mistake.
 
-**Why most of the transaction details are hidden:** Each transaction comes with 165 numbers describing it (things like transaction size, number of inputs/outputs, and statistics about its neighboring transactions). Elliptic scrambled/transformed these numbers on purpose before releasing the data, so nobody could reverse-engineer their exact fraud-detection methods or expose real people's financial details. This means we can't say "feature #12 is the transaction amount" — we only know the numbers exist and can be fed into a model, not exactly what each one means. This is disclosed openly by Elliptic themselves, not something this project uncovered.
+**Why most of the transaction details are hidden:** Each transaction comes with 165 numbers describing it (things like transaction size, number of inputs/outputs, and statistics about its neighboring transactions). Elliptic scrambled/transformed these numbers on purpose before releasing the data, so nobody could reverse-engineer their exact fraud-detection methods or expose real people's financial details. This means we can't say "feature #12 is the transaction amount" — we only know the numbers exist and can be fed into a model, not exactly what each one means.
 
-**Time factor:** Transactions are grouped into 49 time steps (think of it like 49 snapshots of the blockchain taken over time). This matters a lot: to test a model fairly, you have to train it on the *earlier* time steps and test it on *later* ones — otherwise the model could accidentally "cheat" by learning from the future. This project always does it the correct way (see the temporal split explained below).
+**Time factor:** Transactions are grouped into 49 time steps (think of it like 49 snapshots of the blockchain taken over time). This matters: to test a model fairly, you have to train it on the *earlier* time steps and test it on *later* ones — otherwise the model can "cheat" by learning from the future. The train/val/test split throughout this project is by time step, never random.
 
 ## 2. Elliptic++ (an extension, used for the "does this work at a bigger scale" experiment)
 
@@ -23,7 +23,7 @@ This project uses two real, public datasets of actual Bitcoin transactions. Neit
 
 **Who made it:** Researchers at Georgia Tech (Youssef Elmougy and Ling Liu), published at KDD 2023, building on top of Elliptic's original release with the same research spirit — public, free, for research use.
 
-**Why this project uses it:** To test whether the fraud-detection approach still works when the graph is roughly 4x bigger — a legitimate "does this scale up" question, the kind an interviewer might ask.
+**Why this project uses it:** To test whether the fraud-detection approach still works when the graph is roughly 4x bigger.
 
 ## How the data enters this project (technically)
 
