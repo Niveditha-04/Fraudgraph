@@ -6,7 +6,7 @@
 
 A two-layer fraud detection system on the Elliptic Bitcoin transaction graph: a Graph Neural Network that spots suspicious wallet neighborhoods, and an LLM-based investigation agent that reviews each flagged case through a 3-persona panel before drafting a memo — routing to human review whenever the panel disagrees, rather than silently guessing.
 
-Full gate-by-gate results, including everything that didn't go perfectly, are in [VALIDATION_REPORT.md](VALIDATION_REPORT.md).
+Full gate-by-gate results, including everything that didn't go perfectly, are in [VALIDATION_REPORT.md](VALIDATION_REPORT.md). For what the underlying data actually is, who created it, and how — see [DATASET.md](DATASET.md).
 
 ## The problem
 
