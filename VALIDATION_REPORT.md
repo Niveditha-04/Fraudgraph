@@ -64,6 +64,16 @@ Every phase gate from the build guide, what it required, what was actually measu
 
 **Status: PASS.** Statistically significant (large-n artifact) but practically negligible — reported as both facts, not just the significant p-value. Read as the two signals being largely independent/complementary rather than redundant.
 
+**Gap found during a later self-audit (2026-08-26), fixed by adding a proper evaluation, not by changing the score:** this phase originally reported the GNN's own metrics and the raw Benford correlation, but never evaluated the *hybrid score itself* — the actual `0.7×GNN + 0.3×Benford` combination the architecture promises. Added `models/evaluate_hybrid_score.py` (uses only the already-cached per-node scores, no retraining, no new LLM calls) and ran it:
+
+| Score | Precision | Recall | AUC-PR |
+|---|---|---|---|
+| GNN alone | 0.096 | 0.978 | 0.428 |
+| Benford alone | 0.038 | 0.773 | 0.038 |
+| Hybrid (0.7/0.3) | 0.080 | 0.977 | **0.232** |
+
+**The hybrid score performs worse than the GNN alone (AUC-PR 0.232 vs. 0.428).** Consistent with the near-zero correlation above: blending in a signal that isn't correlated with the GNN's score doesn't add complementary information here, it adds noise. This is reported as a genuine negative result, not smoothed into "further work" language — the hybrid-score step as currently weighted has not been shown to help, full stop.
+
 ## Phase 5 — RAG knowledge base
 
 **Required:** 5-10 public AML typology PDFs, chunked/embedded into Chroma, 5 test queries each spot-checked for a genuinely relevant returned chunk.
@@ -99,7 +109,7 @@ Every phase gate from the build guide, what it required, what was actually measu
 | 8 | illicit | 0.867 | uncertain, licit, uncertain | human_resolved | uncertain |
 | 9 | licit | 0.844 | licit, licit, uncertain | human_resolved | licit |
 
-**Status: PASS.** Honest finding, not glossed over: **not one case reached unanimous "illicit"** across all 10 — verdicts were only ever unanimous "licit" or ended in disagreement. The evidence given to personas is aggregate wallet summary statistics, not actual subgraph structure; many flagged wallets are single-transaction wallets, genuinely thin evidence. The panel (particularly the skeptic persona) declines to confidently call "illicit" on thin evidence rather than parroting a high model score — a legitimate calibration behavior, and also a concrete direction for future work (richer per-case evidence, e.g. real subgraph context).
+**Status: PASS against the stated gate** (≥10 cases, mix of ground truth, human-review branch demonstrated to trigger — all literally true). **That is a narrower claim than "the agent works as designed," and it's worth being explicit about the gap between the two:** not one case reached unanimous "illicit" across all 10 — verdicts were only ever unanimous "licit" or ended in disagreement. As built and evaluated, the panel has not yet demonstrated it can confidently confirm fraud on its own; it currently functions closer to "reliably escalates to a human" than "investigates and concludes." The evidence given to personas is aggregate wallet summary statistics, not actual subgraph structure, and many flagged wallets are single-transaction wallets — genuinely thin evidence, and the likely cause. But that's a diagnosis, not a fix, and n=10 is too small to treat any of this as statistically settled either way — it demonstrates the mechanism works, not that the panel's judgment is reliable at scale.
 
 **Model version gap, found while compiling this report — fixed before this commit.** Persona calls used `claude-haiku-4-5-20251001` (current) throughout, but the first two full runs' memo-drafting call used `claude-sonnet-4-5-20250929` — an older dated snapshot, not the current `claude-sonnet-5`. Fixed: `agent/graph.py`'s `MEMO_MODEL` now points to `claude-sonnet-5`, and all 10 memos in the committed `agent/results/phase6_results.json` were regenerated against it (`agent/refresh_memos.py`, reusing the existing persona verdicts/consensus rather than re-running the whole panel). One more real finding along the way: `claude-sonnet-5` rejected the `temperature=0` parameter outright (`400: temperature is deprecated for this model`) — a genuine, live-discovered model-behavior change, not assumed; fixed by omitting `temperature` for this model.
 
@@ -110,6 +120,8 @@ Every phase gate from the build guide, what it required, what was actually measu
 **Result:** Live at **https://niv04-fraudgraph.static.hf.space/** — verified from a cold browser session (no localhost, no prior cookies/cache): all 10 cases load, case-switching works, scores/persona panel/memo/subgraph visualization all render with real data.
 
 **Status: PASS**, with one architecture pivot along the way: the originally-built FastAPI+Docker version could not deploy to HF Spaces' free tier (`create_repo(space_sdk='docker')` returned HTTP 402 — Docker/Gradio Spaces require a paid PRO subscription; only static Spaces are free). Converted to a static site serving pre-exported JSON instead of asking the user to pay — arguably a better fit anyway, since the brief's own requirement was that the demo work "even without live API credits." The FastAPI backend (`api/main.py`) remains in the repo, fully functional for local/live use.
+
+**Positioning fix (2026-08-26):** the README originally labeled this "Live demo," which risked implying a live scoring endpoint (submit a wallet, get a fresh score) rather than what it actually is — 10 pre-computed cases. Relabeled to "Explore 10 investigated cases (live, static — pre-computed, not a live scoring endpoint)" to set correct expectations before a reader clicks through.
 
 **Also fixed via live browser testing, not just code review:** Pyvis's default `cdn_resources='local'` setting wrote graph HTML files expecting a co-located `lib/` asset folder that wasn't deployed — a real, silent rendering bug caught by checking actual browser console/network errors, fixed by switching to `cdn_resources='in_line'` (self-contained HTML, no external asset folder).
 
@@ -127,8 +139,22 @@ Total LLM calls made across the whole build (including throwaway/superseded runs
 
 At Haiku 4.5's confirmed pricing ($1/$5 per million input/output tokens), Sonnet 4.5's known launch pricing ($3/$15 per million, not independently reverified this session), and Sonnet 5's confirmed introductory pricing through Aug 31 2026 ($2/$10 per million), the estimate comes to **roughly $0.50-0.60 total** across the whole session. This is a ballpark, not a bill — **recommend enabling LangSmith tracing** (the brief's own "optional but recommended" suggestion, not yet done) so future runs have exact, not estimated, usage numbers.
 
-## Items fixed during this validation pass
+## Items fixed during the initial validation pass (2026-08-25)
 
 Both items below were caught while compiling this report and corrected before the commit that includes this file — not pushed with known gaps:
 1. **Sonnet model version** (Phase 6): `claude-sonnet-4-5-20250929` → `claude-sonnet-5`, all 10 committed memos regenerated against the corrected model.
 2. **`temperature` parameter**: `claude-sonnet-5` rejects it outright (confirmed via a live 400 error) — removed from the memo-drafting call.
+
+## Second self-audit pass (2026-08-26), prompted by external review
+
+The user shared a detailed external critique of the pushed repo. Cross-checked against what was already disclosed here vs. genuinely new findings:
+
+**Already disclosed, not new** (confirms nothing was hidden, but "disclosed" isn't "fixed"): GAT's weak precision, the undertrained Elliptic++ run, the near-zero Benford correlation, the single squashed commit, the agent not yet confirming illicit unanimously.
+
+**Genuinely new and fixed in this pass** (cheap, no retraining, no new LLM calls — see the user request that scoped this to low-cost fixes only):
+1. **The hybrid score itself had never been evaluated** — only its two ingredients, separately. Added `models/evaluate_hybrid_score.py`; result: the hybrid score performs *worse* than the GNN alone (AUC-PR 0.232 vs 0.428) — see the Phase 4 section above and the README. This is the sharpest catch in the external review and a genuine, previously-unmeasured negative result, not just an oversight in reporting.
+2. **"Live demo" labeling** — fixed, see Phase 7 above.
+3. **GAT presented without a caveat in the results table** — added an explicit "not viable as configured" note next to its row in the README rather than presenting it as a peer option to GraphSAGE.
+4. **No mention of prompt-injection/adversarial risk** — added to the README's "Known limitations" section as a disclosed, unaddressed gap (retrieved RAG text and case evidence both flow into LLM prompts unsanitized).
+
+**Deliberately deferred, not done in this pass** (real fixes, but each requires new API/compute cost or multi-session tooling work — scoped out by explicit user choice, not overlooked): finishing the Elliptic++ training run to convergence, re-running the agent evaluation at n=50+, choosing an operating threshold against a false-positive budget, giving the persona panel real subgraph evidence instead of aggregate stats, and the tooling roadmap (LangSmith, Ragas, W&B, Evidently, Captum/GNNExplainer, DVC, CI regression gates). If revisited, tackle LangSmith + Ragas first — they directly close gaps already documented above (no cost tracking; an eyeballed, not automated, RAG eval).
