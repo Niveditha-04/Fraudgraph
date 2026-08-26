@@ -1,10 +1,12 @@
 """
-Evaluates the hybrid score (0.7*GNN + 0.3*Benford) itself against ground
+Evaluates the ORIGINAL hybrid score (0.7*GNN + 0.3*Benford) against ground
 truth, using precision/recall/AUC-PR -- not just its two components in
-isolation. This was a real gap: Phase 4 reported a Pearson correlation
-between the GNN score and the Benford score, and Phase 3.5 reported the
-GNN's own metrics, but nobody had actually asked "does the COMBINED score
-that the architecture diagram promises do anything useful as a classifier."
+isolation. This script is what proved that weighting underperforms the GNN
+alone (see the results printed below), which is why models/hybrid_config.py
+now sets HYBRID_WEIGHT_BENFORD=0. The 0.7/0.3 constants here are deliberately
+hardcoded, not imported from hybrid_config -- this script's job is to
+document what the rejected weighting did, not to track whatever the current
+production weighting is.
 
 Uses the per-node scores already cached by models/run_phase4.py
 (models/results/phase4_node_scores.npz) -- no retraining, no new LLM calls,
@@ -17,7 +19,7 @@ import numpy as np
 from models.metrics import compute_metrics
 
 SCORES_PATH = "models/results/phase4_node_scores.npz"
-HYBRID_WEIGHT_GNN = 0.7
+HYBRID_WEIGHT_GNN = 0.7  # the original, rejected weighting -- see module docstring
 HYBRID_WEIGHT_BENFORD = 0.3
 
 

@@ -302,8 +302,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"borderWidth": 3, "color": "#ffb300", "font": {"color": "#e6edf3"}, "id": 230145, "label": "CASE #230145", "shape": "dot", "size": 32, "title": "Flagged wallet (case 8) -- ground truth: illicit"}, {"color": "#e53935", "font": {"color": "#e6edf3"}, "id": 24385, "label": "24385", "shape": "dot", "size": 14, "title": "wallet 24385 -- label: illicit"}, {"color": "#e53935", "font": {"color": "#e6edf3"}, "id": 431389, "label": "431389", "shape": "dot", "size": 14, "title": "wallet 431389 -- label: illicit"}]);
-                  edges = new vis.DataSet([{"color": "#484f58", "from": 230145, "to": 431389}, {"color": "#484f58", "from": 230145, "to": 24385}]);
+                  nodes = new vis.DataSet([{"borderWidth": 3, "color": "#ffb300", "font": {"color": "#e6edf3"}, "id": 172390, "label": "CASE #172390", "shape": "dot", "size": 32, "title": "Flagged wallet (case 8) -- ground truth: illicit"}, {"color": "#9e9e9e", "font": {"color": "#e6edf3"}, "id": 443264, "label": "443264", "shape": "dot", "size": 14, "title": "wallet 443264 -- label: unknown"}, {"color": "#e53935", "font": {"color": "#e6edf3"}, "id": 640894, "label": "640894", "shape": "dot", "size": 14, "title": "wallet 640894 -- label: illicit"}, {"color": "#e53935", "font": {"color": "#e6edf3"}, "id": 152451, "label": "152451", "shape": "dot", "size": 14, "title": "wallet 152451 -- label: illicit"}]);
+                  edges = new vis.DataSet([{"color": "#484f58", "from": 172390, "to": 152451}, {"color": "#484f58", "from": 172390, "to": 640894}, {"color": "#484f58", "from": 443264, "to": 172390}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

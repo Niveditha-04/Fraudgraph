@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-26 (5)
+
+- Changed the hybrid score formula: `models/hybrid_config.py` (new, single source of truth, replacing three separately-hardcoded copies) sets `HYBRID_WEIGHT_GNN=1.0`, `HYBRID_WEIGHT_BENFORD=0.0`. The hybrid score is now the GNN score alone, since Benford's Law deviation was confirmed non-predictive of the ground-truth label on its own (standalone AUC-PR below the base rate). `models/evaluate_hybrid_score.py` still hardcodes the original 0.7/0.3 weighting deliberately, to document what that weighting did.
+- Re-ran Phase 4 and the full Phase 6 pipeline against the corrected formula. Case selection changed (9 of 10 wallets are different from the previous set; only node 286169 is shared) since it's stratified by hybrid score. Gate still passes: 6/10 human review, 3 illicit/7 licit ground truth.
+- The new case 2 (wallet #565660) replaces the old case 2 as the named "confident miss" example: a confirmed-illicit wallet with a one-hop pass-through pattern (received ~0.0234 BTC, sent ~0.0234 BTC back out), GNN/hybrid score exactly 0.000, panel unanimous at 0.92-0.95 confidence it's licit.
+- Regenerated all dashboard subgraphs, static case data, and both report charts; redeployed to the live HF Space.
+- Updated the measured LLM cost total: 102 traced calls, $0.7948 (was $0.1961 after the first traced run).
+
 ## 2026-08-26 (4)
 
 - Added `models/threshold_analysis.py`. GAT's default-threshold precision (0.115) was largely a threshold artifact: at its own F1-optimal threshold (selected on the validation set), precision reaches 0.552 and F1 more than doubles (0.199→0.402). Corrected the "GAT not viable" framing in README/VALIDATION_REPORT to reflect this — GraphSAGE still wins on AUC-PR and F1 at every threshold, but the gap is smaller than the default-threshold numbers implied.

@@ -30,17 +30,13 @@ from data.prepare_elliptic_pp import validate_and_cache
 from models.benford import compute_node_benford_scores, get_btc_amount_column_indices
 from models.data_utils_pp import prepare_pp_data
 from models.gnn_models import GraphSAGE
+from models.hybrid_config import HYBRID_WEIGHT_BENFORD, HYBRID_WEIGHT_GNN
 from models.train_gnn import train_gnn
 
 SEED = 42
 HIDDEN_DIM = 16
 EPOCHS = 25
 PATIENCE = 6
-HYBRID_WEIGHT_GNN = 0.7  # documented weighting: GNN score weighted higher --
-# it's a supervised, learned signal validated against ground-truth labels
-# (Phase 3.5's gate), whereas the Benford score is an unsupervised heuristic
-# with no direct illicit/licit calibration of its own.
-HYBRID_WEIGHT_BENFORD = 0.3
 
 
 def min_max_normalize(x: np.ndarray) -> np.ndarray:

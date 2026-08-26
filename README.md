@@ -23,7 +23,7 @@ flowchart TB
         B --> C[Illicit-probability score]
     end
     subgraph Hybrid["2 · Hybrid score"]
-        C --> D[0.7 × GNN + 0.3 × Benford]
+        C --> D["Hybrid score = GNN score<br/><i>Benford weight = 0: confirmed non-predictive</i>"]
         E[Benford's Law deviation<br/>on real BTC amounts] --> D
     end
     subgraph Investigation["3 · Agentic investigation (research-frontier)"]
@@ -68,21 +68,23 @@ GraphSAGE beats the non-graph baseline by ~2.5x on both datasets — the graph s
 
 **Benford's Law correlation:** r = 0.042 (p = 2×10⁻²⁸) between Benford deviation and the GNN score, on 70,487 test nodes — statistically significant at this sample size, practically negligible.
 
-**Hybrid score (0.7×GNN + 0.3×Benford), evaluated as a combined classifier:**
+**Hybrid score, evaluated as a combined classifier — this is what led to changing the formula:**
 
 | Score | Precision | Recall | AUC-PR |
 |---|---|---|---|
 | GNN alone | 0.096 | 0.978 | **0.428** |
 | Benford alone | 0.038 | 0.773 | 0.038 |
-| Hybrid (0.7/0.3) | 0.080 | 0.977 | 0.232 |
+| Original hybrid (0.7×GNN + 0.3×Benford) | 0.080 | 0.977 | 0.232 |
 
-The hybrid score underperforms the GNN alone. The "Benford alone" row is Benford's own precision/recall/AUC-PR against the ground-truth label, not just its correlation with the GNN score — illicit is 4.49% of this test set, and Benford's standalone AUC-PR (0.038) is below that base rate. Benford's Law deviation is a confirmed non-predictive signal here, not merely an untested one; giving it 30% weight is what drags the hybrid score below the GNN alone. See `models/evaluate_hybrid_score.py`.
+The original 0.7/0.3 hybrid score underperformed the GNN alone. The "Benford alone" row is Benford's own precision/recall/AUC-PR against the ground-truth label, not just its correlation with the GNN score — illicit is 4.49% of this test set, and Benford's standalone AUC-PR (0.038) is below that base rate. Benford's Law deviation is a confirmed non-predictive signal here, not merely an untested one; giving it 30% weight actively dragged the hybrid score below the GNN alone. See `models/evaluate_hybrid_score.py`.
+
+**The hybrid formula was changed as a result: `models/hybrid_config.py` now sets the weighting to 100% GNN / 0% Benford** — the "hybrid" score is currently the GNN score alone. Benford's computation and its rejected-weighting evaluation stay in the codebase as a documented negative result, not deleted. All case data, scores, and dashboard content below reflect the corrected formula.
 
 **Investigation agent:** run on 10 test cases (3 illicit / 7 licit ground truth) — 6 of 10 triggered human review on panel disagreement. No case reached unanimous "illicit" consensus. See Known limitations.
 
 ![Hybrid score by case, colored by ground truth](assets/hybrid_score_by_case.png)
 
-A well-calibrated score would show illicit (orange) cases clustered high and licit (blue) cases clustered low. The overlap here is real: case 2 is a confirmed-illicit wallet the panel unanimously classified as licit at 0.88-0.92 confidence — see VALIDATION_REPORT.md for detail.
+A well-calibrated score would show illicit (orange) cases clustered high and licit (blue) cases clustered low. The overlap here is real: case 2 is a confirmed-illicit wallet with a GNN/hybrid score of exactly 0.000, and the panel unanimously classified it licit at 0.92-0.95 confidence — see VALIDATION_REPORT.md for detail.
 
 ## Repository layout
 
@@ -128,7 +130,7 @@ PyTorch + PyTorch Geometric (GraphSAGE/GAT), LangChain / LangGraph (`create_agen
 
 ## Known limitations
 
-- The hybrid score underperforms the GNN alone (see Results) — Benford's Law deviation is confirmed non-predictive of the ground-truth label on its own (standalone AUC-PR below the base rate), so its 30% weight actively hurts the combined score rather than adding complementary signal.
+- The "hybrid" score is currently the GNN score alone (Benford weighted at 0, see Results) — there is no second predictive signal complementing the GNN right now. A genuinely predictive second signal (e.g. transaction burstiness, in/out-degree ratio, wallet age) would need to replace Benford before the hybrid architecture adds real value over the GNN by itself.
 - GAT's default-threshold precision (0.115) looks unusable but is substantially a threshold artifact — at its own F1-optimal threshold it reaches 0.552 precision (see Results). GraphSAGE still outperforms it at every threshold (higher AUC-PR, better F1), but "not viable" overstates the gap.
 - The Elliptic++ GraphSAGE run is undertrained: capped at 25 epochs by a memory constraint while validation AUC-PR was still climbing (0.36→0.71 in its last 5 logged epochs). Its 0.428 AUC-PR is a floor, not a converged result.
 - Thresholds are F1-optimal (see Results), not chosen against a deployment false-positive budget — a real deployment picks a threshold based on how many flags a compliance team can actually review per day, which may differ from the F1-maximizing point.

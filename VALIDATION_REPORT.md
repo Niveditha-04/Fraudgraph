@@ -81,17 +81,19 @@ Base Elliptic's 165 features are anonymized by the dataset's own documentation, 
 
 **Result: Pearson r = 0.0416 (p = 2.06×10⁻²⁸), n = 70,487.** Statistically significant at this sample size, practically negligible — the two signals are largely independent rather than redundant.
 
-**Hybrid score (0.7×GNN + 0.3×Benford), evaluated as a combined classifier** (`models/evaluate_hybrid_score.py`):
+**Original hybrid score (0.7×GNN + 0.3×Benford), evaluated as a combined classifier** (`models/evaluate_hybrid_score.py`):
 
 | Score | Precision | Recall | AUC-PR |
 |---|---|---|---|
 | GNN alone | 0.096 | 0.978 | 0.428 |
 | Benford alone | 0.038 | 0.773 | 0.038 |
-| Hybrid (0.7/0.3) | 0.080 | 0.977 | **0.232** |
+| Original hybrid (0.7/0.3) | 0.080 | 0.977 | **0.232** |
 
-**Status: PASS** on the printed-correlation requirement. **The hybrid score underperforms the GNN alone** (AUC-PR 0.232 vs. 0.428).
+**Status: PASS** on the printed-correlation requirement. **The original 0.7/0.3 hybrid score underperformed the GNN alone** (AUC-PR 0.232 vs. 0.428).
 
-The "Benford alone" row above is Benford's own precision/recall/AUC-PR against the ground-truth illicit label directly, not just its correlation with the GNN score. Illicit is 4.49% of this test set (3,167/70,487); Benford's standalone AUC-PR (0.038) is below that base rate, meaning Benford's Law deviation predicts the ground-truth label at or below chance level on its own. Combined with its near-zero correlation to the GNN score, this is not "unvalidated" — it's a confirmed non-predictive signal being given 30% weight in the hybrid score, which is the direct cause of the hybrid score's underperformance.
+The "Benford alone" row above is Benford's own precision/recall/AUC-PR against the ground-truth illicit label directly, not just its correlation with the GNN score. Illicit is 4.49% of this test set (3,167/70,487); Benford's standalone AUC-PR (0.038) is below that base rate, meaning Benford's Law deviation predicts the ground-truth label at or below chance level on its own. Combined with its near-zero correlation to the GNN score, this is not "unvalidated" — it's a confirmed non-predictive signal, and giving it 30% weight was the direct cause of the original hybrid score's underperformance.
+
+**Fix applied:** `models/hybrid_config.py` now sets `HYBRID_WEIGHT_GNN=1.0`, `HYBRID_WEIGHT_BENFORD=0.0` — the hybrid score used everywhere else in this report and in the deployed cases is the GNN score alone. `models/evaluate_hybrid_score.py` still hardcodes the original 0.7/0.3 weighting deliberately, to document what that weighting did; it is not the active configuration. Phase 6's cases below were regenerated end-to-end (new case selection, new persona panel runs, new memos) against the corrected formula.
 
 ## Phase 5 — RAG knowledge base
 
@@ -115,22 +117,22 @@ The "Benford alone" row above is Benford's own precision/recall/AUC-PR against t
 
 **Result: 10/10 cases run, 3 illicit / 7 licit ground truth, 6/10 triggered human review.**
 
-| Case | Ground truth | Hybrid score | Persona verdicts | Status | Final verdict |
-|---|---|---|---|---|---|
-| 0 | licit | 0.367 | licit, licit, licit | auto_finalized | licit |
-| 1 | licit | 0.526 | uncertain, licit, uncertain | human_resolved | uncertain |
-| 2 | illicit | 0.074 | licit, licit, licit | auto_finalized | licit |
-| 3 | licit | 0.698 | licit, uncertain, uncertain | human_resolved | uncertain |
-| 4 | licit | 0.002 | licit, licit, licit | auto_finalized | licit |
-| 5 | illicit | 1.000 | uncertain, uncertain, licit | human_resolved | uncertain |
-| 6 | licit | 0.266 | licit, licit, licit | auto_finalized | licit |
-| 7 | licit | 0.999 | uncertain, uncertain, uncertain | human_resolved | uncertain |
-| 8 | illicit | 0.867 | uncertain, licit, uncertain | human_resolved | uncertain |
-| 9 | licit | 0.844 | licit, licit, uncertain | human_resolved | licit |
+| Case | Wallet node | Ground truth | Hybrid score | Persona verdicts | Status | Final verdict |
+|---|---|---|---|---|---|---|
+| 0 | 412186 | licit | 0.208 | licit, licit, licit | auto_finalized | licit |
+| 1 | 278203 | licit | 0.418 | licit, uncertain, licit | human_resolved | licit |
+| 2 | 565660 | illicit | 0.000 | licit, licit, licit | auto_finalized | licit |
+| 3 | 358143 | licit | 0.654 | uncertain, uncertain, uncertain | human_resolved | uncertain |
+| 4 | 609743 | licit | 0.000 | licit, licit, licit | auto_finalized | licit |
+| 5 | 286169 | illicit | 1.000 | uncertain, uncertain, uncertain | human_resolved | uncertain |
+| 6 | 551089 | licit | 0.000 | licit, licit, licit | auto_finalized | licit |
+| 7 | 457333 | licit | 1.000 | uncertain, uncertain, uncertain | human_resolved | uncertain |
+| 8 | 172390 | illicit | 0.919 | uncertain, uncertain, uncertain | human_resolved | uncertain |
+| 9 | 132754 | licit | 0.875 | uncertain, uncertain, uncertain | human_resolved | uncertain |
 
 ![Hybrid score by case, colored by ground truth](assets/hybrid_score_by_case.png)
 
-Case 2 (wallet #572167) is a genuine illicit wallet the panel unanimously and confidently classified as licit — GNN score 0.002, all three personas at 0.88-0.92 confidence, auto-finalized with no human review triggered. The wallet's surface pattern (7 inbound transactions, 0 outbound) looks like ordinary passive receiving activity; underneath it's confirmed fraud. This is a concrete instance of the GNN's 0.428 test AUC-PR producing a real false negative, not just a number on its own.
+Case 2 (wallet #565660) is a genuine illicit wallet the panel unanimously and confidently classified as licit — GNN/hybrid score exactly 0.000, all three personas at 0.92-0.95 confidence, auto-finalized with no human review triggered. The wallet has only 2 transactions total (received ~0.0234 BTC, then sent almost the same amount back out) — a one-hop pass-through pattern that is itself a classic layering building block, not just quiet passive activity, and the model still scored it as clean as possible. This is a concrete instance of the GNN's 0.428 test AUC-PR producing a real false negative, not just a number on its own.
 
 **Status: PASS against the stated gate** (≥10 cases, mix of ground truth, human-review branch triggers). That's narrower than "the agent works as designed." No case reached unanimous "illicit" across all 10 — verdicts were either unanimous "licit" or a disagreement. As evaluated, the panel escalates reliably but has not demonstrated it can confirm fraud on its own. The panel is given aggregate wallet statistics, not subgraph structure, and many flagged wallets are single-transaction wallets — thin evidence, and the likely cause, though that's a diagnosis rather than a fix. n=10 is too small to draw statistical conclusions about panel reliability at scale; it demonstrates the human-review mechanism works.
 
@@ -154,9 +156,9 @@ This report + `README.md` + `DATASET.md` + `.github/workflows/tests.yml` (12 tes
 
 LangSmith tracing is enabled (`LANGCHAIN_TRACING_V2=true`, project `Fraudgraph`) and covers all calls made after it was wired in, including one full Phase 6 gate re-run and the memo-drafting fix below.
 
-**Measured (LangSmith, `run_type=llm` only — excludes LangGraph's node/chain-level wrapper traces to avoid double-counting):** 41 LLM calls, 58,102 input tokens, 14,773 output tokens, $0.1961 total. 10 calls on `claude-sonnet-5` (24,127 input / 8,000 output tokens, $0.1283) and 31 calls on `claude-haiku-4-5-20251001` (33,975 input / 6,773 output tokens, $0.0678).
+**Measured (LangSmith, `run_type=llm` only — excludes LangGraph's node/chain-level wrapper traces to avoid double-counting):** 102 LLM calls, 165,549 input tokens, 60,031 output tokens, **$0.7948 total**. 41 calls on `claude-sonnet-5` (96,891 input / 46,445 output tokens, $0.6582) and 61 calls on `claude-haiku-4-5-20251001` (68,658 input / 13,586 output tokens, $0.1366).
 
-This covers only the traced portion of the build (one full Phase 6 run plus setup calls), not the earlier untraced runs (initial Phase 6 gate runs, the 3-case smoke test). Total cost across the whole build, including untraced calls, is estimated at $0.50-0.70.
+This covers all LangSmith-traced calls (every Phase 6 run since tracing was enabled, including the corrected-formula re-run and the memo-length fixes). It does not cover the earlier untraced runs before LangSmith was wired in (the initial Phase 6 gate runs, the 3-case smoke test) — total cost across the entire build, including those, is estimated at roughly $1.10-1.30.
 
 ## Known gaps not addressed in this repo
 
@@ -165,4 +167,5 @@ This covers only the traced portion of the build (one full Phase 6 run plus setu
 - Agent evaluation is n=10; not large enough for statistical conclusions about panel reliability.
 - No prompt-injection or adversarial-input testing — retrieved RAG text and case evidence flow into LLM prompts unsanitized.
 - Elliptic++ GraphSAGE has not been trained to convergence (see Phase 3.5).
+- The hybrid score is currently the GNN score alone (Benford weighted at 0) — no second predictive signal complements the GNN yet.
 - No automated RAG evaluation harness — Phase 5's check is 5 manually-read queries. Ragas was attempted; both the latest release (0.4.3) and the last version known to work with current LangChain (0.3.9) fail to import, because ragas unconditionally imports `langchain_community.chat_models.vertexai`, a module removed from current `langchain-community` (tracked upstream in ragas issues #2745/#2753). Not resolved by pinning an older ragas version, since the incompatibility is with this project's `langchain-community` version, not ragas's.

@@ -19,6 +19,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from data.prepare_elliptic_pp import validate_and_cache
+from models.hybrid_config import HYBRID_WEIGHT_BENFORD, HYBRID_WEIGHT_GNN
 
 SCORES_PATH = "models/results/phase4_node_scores.npz"
 
@@ -54,7 +55,10 @@ def build_evidence_summary(node_idx: int, feature_names: list[str], x_raw: np.nd
         f"model trained on labeled Elliptic++ wallets, temporal holdout test AUC-PR 0.428)",
         f"- Benford's Law deviation score (MAD): {benford_score:.4f} (0=amounts closely follow Benford's "
         f"Law's expected first-digit distribution; higher = more deviation from natural transaction amounts)",
-        f"- Combined hybrid score: {hybrid_score:.3f} (0.7*GNN + 0.3*Benford, both normalized 0-1)",
+        f"- Combined hybrid score: {hybrid_score:.3f} "
+        f"({HYBRID_WEIGHT_GNN:g}*GNN + {HYBRID_WEIGHT_BENFORD:g}*Benford, both normalized 0-1; "
+        f"Benford is weighted at {HYBRID_WEIGHT_BENFORD:g} because it was found to predict the illicit "
+        f"label at or below chance level on its own)",
         "",
         "Wallet activity summary:",
         f"- total transactions: {feat['total_txs']:.0f} (as sender: {feat['num_txs_as_sender']:.0f}, "
@@ -85,7 +89,7 @@ def build_test_cases(n_cases: int = 10, seed: int = 42) -> list[Case]:
 
     gnn_norm = _min_max(gnn_probs[valid])
     benford_norm = _min_max(benford_scores[valid])
-    hybrid = 0.7 * gnn_norm + 0.3 * benford_norm
+    hybrid = HYBRID_WEIGHT_GNN * gnn_norm + HYBRID_WEIGHT_BENFORD * benford_norm
 
     rng = np.random.default_rng(seed)
     n = len(hybrid)
