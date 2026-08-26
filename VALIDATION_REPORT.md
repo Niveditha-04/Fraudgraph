@@ -146,6 +146,8 @@ The memo-drafting call's `max_tokens` was set too low (800): LangSmith traces sh
 
 **Status: PASS.** The FastAPI+Docker version couldn't deploy to HF Spaces' free tier — Docker/Gradio Spaces require a paid PRO subscription there; only static Spaces are free. Deployed as a static site serving pre-exported JSON instead, which also satisfies the brief's requirement that the demo work without live API credits. The FastAPI backend (`api/main.py`) remains in the repo for local/live use.
 
+The deployed dashboard had a CDN caching defect: the data files carry no `Cache-Control` header, so the CDN in front of the static Space could serve different cache ages of `cases.json` (the sidebar list) and `case_N.json` (the detail panel) to different sessions, making the sidebar and detail view disagree on the same case. Caught during manual QA, fixed with a per-page-load cache-busting token on every data fetch and the subgraph iframe. Regression coverage added: `tests/test_dashboard_e2e.py` (Playwright) loads the live deployed page, clicks through all 10 cases, and asserts the sidebar's node id and hybrid score, the detail panel's score tile, and the wallet number quoted in the memo text all agree — runs in CI as a separate job (`e2e-dashboard`) on every push and weekly, not only when checked by hand. Verified the test actually catches this class of bug by reproducing the exact failure locally and confirming it fails before confirming it passes clean.
+
 ## Phase 8 — Documentation
 
 This report + `README.md` + `DATASET.md` + `.github/workflows/tests.yml` (12 tests: unit tests for the metrics/Benford math, plus an integration test re-verifying the Phase 1 data-validation gate against the live dataset; runs on push, PR, and weekly).

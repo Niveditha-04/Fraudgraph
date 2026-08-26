@@ -26,4 +26,24 @@ jobs:
         run: pip install -r requirements-test.txt
 
       - name: Run test suite
-        run: python -m pytest tests/ -v
+        run: python -m pytest tests/ -v --ignore=tests/test_dashboard_e2e.py
+
+  e2e-dashboard:
+    runs-on: ubuntu-latest
+    # separate job so a live-site issue shows as its own failure, distinct
+    # from the offline unit/data tests above
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install E2E dependencies
+        run: |
+          pip install -r requirements-e2e.txt
+          playwright install --with-deps chromium
+
+      - name: Run dashboard consistency check against the live deployment
+        run: python -m pytest tests/test_dashboard_e2e.py -v

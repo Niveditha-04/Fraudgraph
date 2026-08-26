@@ -118,7 +118,7 @@ async function selectCase(caseId) {
     <h3>Investigation Memo</h3>
     <div class="memo">${c.memo}</div>
     <h3>Wallet Subgraph</h3>
-    <iframe src="graphs/case_${c.case_id}.html"></iframe>
+    <iframe src="graphs/case_${c.case_id}.html?v=${CACHE_BUST}"></iframe>
   `;
 }
 

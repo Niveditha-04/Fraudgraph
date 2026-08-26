@@ -126,7 +126,7 @@ uvicorn api.main:app --reload
 
 ## Tooling
 
-PyTorch + PyTorch Geometric (GraphSAGE/GAT), LangChain / LangGraph (`create_agent`, `StateGraph`, `interrupt()`-based human-in-the-loop), Chroma via `langchain-chroma`, local HuggingFace embeddings for RAG, FastAPI, Pyvis.
+PyTorch + PyTorch Geometric (GraphSAGE/GAT), LangChain / LangGraph (`create_agent`, `StateGraph`, `interrupt()`-based human-in-the-loop), Chroma via `langchain-chroma`, local HuggingFace embeddings for RAG, FastAPI, Pyvis, Playwright (E2E dashboard regression test, runs in CI against the live deployment).
 
 ## Known limitations
 

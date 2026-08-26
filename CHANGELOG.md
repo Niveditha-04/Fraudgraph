@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-26 (6)
+
+- Found the subgraph `<iframe>` had the same CDN cache exposure as the two `fetch()` calls (no cache-busting at all) -- fixed for consistency.
+- Added `tests/test_dashboard_e2e.py` (Playwright): loads the live deployed dashboard, clicks through all 10 cases, asserts the sidebar's node id/hybrid score, the detail panel's score tile, and the memo's own quoted wallet number all agree. Runs as a separate CI job (`e2e-dashboard`) on push/PR/weekly, so this class of bug is caught automatically going forward instead of requiring another manual QA pass.
+- Verified the test actually detects the bug it's meant to catch: reproduced the exact original failure locally (stale `cases.json`, correct `case_N.json`) and confirmed the test fails on it, then confirmed it passes clean against the real fix.
+
 ## 2026-08-26 (5)
 
 - Changed the hybrid score formula: `models/hybrid_config.py` (new, single source of truth, replacing three separately-hardcoded copies) sets `HYBRID_WEIGHT_GNN=1.0`, `HYBRID_WEIGHT_BENFORD=0.0`. The hybrid score is now the GNN score alone, since Benford's Law deviation was confirmed non-predictive of the ground-truth label on its own (standalone AUC-PR below the base rate). `models/evaluate_hybrid_score.py` still hardcodes the original 0.7/0.3 weighting deliberately, to document what that weighting did.
