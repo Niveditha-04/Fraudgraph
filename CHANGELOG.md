@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-26 (7)
+
+- A review claimed VALIDATION_REPORT.md's Phase 6 table and cost section, and README's mermaid diagram, still described the pre-hybrid-fix state. Checked directly against the source files: all three were already correct as of the previous two commits (`f4f327d`, `b1bf218`) -- the claim was based on a stale view of the repo, not its actual state. No content changes made on this basis.
+- Added `tests/test_docs_consistency.py`: fails the build if VALIDATION_REPORT.md's stated hybrid weights or Phase 6 table drift from `models/hybrid_config.py` and `agent/results/phase6_results.json`. Runs in the existing fast unit-test job (no new dependencies). Verified it actually catches drift: reproduced a stale-weights case and a stale-table-score case against deliberately corrupted copies of the report, confirmed both fail with a clear message, then confirmed clean against the real file.
+- Added a dashboard footnote (sidebar tooltip + detail panel text) clarifying that "👤 human-reviewed" is a documented simulated majority-vote rule (`agent/run_phase6.py`), not an actual person -- the code already disclosed this, the UI didn't.
+
 ## 2026-08-26 (6)
 
 - Found the subgraph `<iframe>` had the same CDN cache exposure as the two `fetch()` calls (no cache-busting at all) -- fixed for consistency.
