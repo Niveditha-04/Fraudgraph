@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-26 (4)
+
+- Added `models/threshold_analysis.py`. GAT's default-threshold precision (0.115) was largely a threshold artifact: at its own F1-optimal threshold (selected on the validation set), precision reaches 0.552 and F1 more than doubles (0.199→0.402). Corrected the "GAT not viable" framing in README/VALIDATION_REPORT to reflect this — GraphSAGE still wins on AUC-PR and F1 at every threshold, but the gap is smaller than the default-threshold numbers implied.
+- Added base-rate context to the existing Benford standalone validation (`models/evaluate_hybrid_score.py`, run in an earlier session): illicit is 4.49% of the test set; Benford's standalone AUC-PR (0.038) is below that base rate, meaning it predicts the label at or below chance level on its own. This analysis already existed before this entry — only the base-rate framing is new.
+- Added `LICENSE` (MIT).
+- Added a note to the architecture diagram's investigation step: personas currently receive aggregate wallet stats, not subgraph structure.
+
 ## 2026-08-26 (3)
 
 - Added `models/generate_report_charts.py`, generating `assets/model_comparison.png` and `assets/hybrid_score_by_case.png` from the committed result files. Added `assets/dashboard_screenshot.png` (headless Chrome capture of the live deployment). All three embedded in README.md and VALIDATION_REPORT.md.

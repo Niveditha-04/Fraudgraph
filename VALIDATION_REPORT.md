@@ -48,6 +48,17 @@ Unlabeled ("unknown") transactions outnumber labeled-licit ones in every one of 
 
 This is partly explained by extreme per-timestep volatility in illicit transaction counts, not a smooth distribution shift: within the test window (t40-49), timestep 46 has only 2 illicit transactions and timestep 45 has 5, while timestep 42 has 239 — a ~120x range. AUC-PR computed across the whole test window mixes near-empty and dense timesteps rather than reflecting stable performance on a uniform distribution.
 
+**Threshold analysis** (`models/threshold_analysis.py`): the precision/recall pairs above are both at the default 0.5 threshold, uncalibrated per model. Retraining both models (same seed, config unchanged — reproduced the exact precision/recall/AUC-PR above, confirming determinism) and selecting each model's F1-maximizing threshold on the validation set only (never the test set), then applying it to test:
+
+| Model | Threshold | Precision | Recall | F1 |
+|---|---|---|---|---|
+| GraphSAGE | 0.50 (default) | 0.673 | 0.539 | 0.599 |
+| GraphSAGE | 0.83 (F1-max) | 0.784 | 0.497 | 0.608 |
+| GAT | 0.50 (default) | 0.115 | 0.753 | 0.199 |
+| GAT | 0.93 (F1-max) | 0.552 | 0.316 | 0.402 |
+
+GAT's default-threshold precision (0.115) is substantially a threshold artifact: at its own optimal threshold it reaches 0.552 precision, more than quadrupling, and F1 more than doubles (0.199→0.402). GraphSAGE's improvement at its optimal threshold is comparatively modest. This does not change which model is better — GraphSAGE still wins on AUC-PR (threshold-independent) and still has the higher F1 even at GAT's best threshold — but the magnitude of "GAT is unusable" in the default-threshold numbers overstates the actual gap between the two models.
+
 ## Phase 3.5 — Elliptic++ scale extension (822,942 wallet nodes, optional)
 
 **Required:** completed or explicitly skipped, both result sets reported side by side.
@@ -78,7 +89,9 @@ Base Elliptic's 165 features are anonymized by the dataset's own documentation, 
 | Benford alone | 0.038 | 0.773 | 0.038 |
 | Hybrid (0.7/0.3) | 0.080 | 0.977 | **0.232** |
 
-**Status: PASS** on the printed-correlation requirement. **The hybrid score underperforms the GNN alone** (AUC-PR 0.232 vs. 0.428) — blending in a signal uncorrelated with the GNN's score adds noise rather than complementary information at this weighting. The combined-score step has not been shown to add value.
+**Status: PASS** on the printed-correlation requirement. **The hybrid score underperforms the GNN alone** (AUC-PR 0.232 vs. 0.428).
+
+The "Benford alone" row above is Benford's own precision/recall/AUC-PR against the ground-truth illicit label directly, not just its correlation with the GNN score. Illicit is 4.49% of this test set (3,167/70,487); Benford's standalone AUC-PR (0.038) is below that base rate, meaning Benford's Law deviation predicts the ground-truth label at or below chance level on its own. Combined with its near-zero correlation to the GNN score, this is not "unvalidated" — it's a confirmed non-predictive signal being given 30% weight in the hybrid score, which is the direct cause of the hybrid score's underperformance.
 
 ## Phase 5 — RAG knowledge base
 
@@ -147,7 +160,7 @@ This covers only the traced portion of the build (one full Phase 6 run plus setu
 
 ## Known gaps not addressed in this repo
 
-- No operating threshold chosen against a false-positive budget — all metrics are at the default 0.5 threshold.
+- Thresholds are F1-optimal (see Phase 3's threshold analysis), not chosen against a deployment false-positive budget — a real deployment picks a threshold based on how many flags a compliance team can actually review per day, which may differ from the F1-maximizing point.
 - The persona panel receives aggregate wallet statistics, not real subgraph/neighbor context.
 - Agent evaluation is n=10; not large enough for statistical conclusions about panel reliability.
 - No prompt-injection or adversarial-input testing — retrieved RAG text and case evidence flow into LLM prompts unsanitized.

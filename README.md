@@ -27,7 +27,7 @@ flowchart TB
         E[Benford's Law deviation<br/>on real BTC amounts] --> D
     end
     subgraph Investigation["3 · Agentic investigation (research-frontier)"]
-        D --> F[LangGraph: retrieve case]
+        D --> F["LangGraph: retrieve case<br/><i>current: aggregate wallet stats,<br/>not subgraph structure</i>"]
         F --> G[3-persona panel<br/>AML analyst · compliance officer · skeptic]
         G --> H{Unanimous?}
         H -->|yes| I[RAG lookup<br/>FATF/FinCEN typology docs]
@@ -50,9 +50,11 @@ Metrics are precision / recall / AUC-PR, never accuracy — illicit is 2-10% of 
 |---|---|---|---|
 | Logistic Regression (no graph) | 0.150 | 0.835 | 0.220 |
 | GraphSAGE | 0.673 | 0.539 | **0.542** |
-| GAT | 0.115 | 0.753 | 0.372 — not viable at this precision (~88% false-alarm rate); shown for comparison, not as a deployable option |
+| GAT | 0.115 | 0.753 | 0.372 |
 
 ![Model comparison bar chart](assets/model_comparison.png)
+
+The precision/recall pairs above are at the default 0.5 classification threshold, and GAT's low precision there is partly a threshold artifact, not purely a model-quality gap: at each model's own F1-maximizing threshold (selected on the validation set, applied to test), GraphSAGE improves modestly (precision 0.673→0.784, F1 0.599→0.608 at threshold 0.83) while GAT improves sharply (precision 0.115→0.552, F1 0.199→0.402 at threshold 0.93). GraphSAGE still wins on AUC-PR (threshold-independent: 0.542 vs 0.372) and still has the better F1 even at GAT's best threshold, so the ranking doesn't change — but GAT is a substantially more usable model than its default-threshold numbers suggest. See `models/threshold_analysis.py`.
 
 **Elliptic++ (822,942 wallet nodes, optional scale extension):**
 
@@ -74,7 +76,7 @@ GraphSAGE beats the non-graph baseline by ~2.5x on both datasets — the graph s
 | Benford alone | 0.038 | 0.773 | 0.038 |
 | Hybrid (0.7/0.3) | 0.080 | 0.977 | 0.232 |
 
-The hybrid score underperforms the GNN alone. Benford's near-zero correlation with the GNN score means blending it in adds noise rather than complementary signal at this weighting. See `models/evaluate_hybrid_score.py`.
+The hybrid score underperforms the GNN alone. The "Benford alone" row is Benford's own precision/recall/AUC-PR against the ground-truth label, not just its correlation with the GNN score — illicit is 4.49% of this test set, and Benford's standalone AUC-PR (0.038) is below that base rate. Benford's Law deviation is a confirmed non-predictive signal here, not merely an untested one; giving it 30% weight is what drags the hybrid score below the GNN alone. See `models/evaluate_hybrid_score.py`.
 
 **Investigation agent:** run on 10 test cases (3 illicit / 7 licit ground truth) — 6 of 10 triggered human review on panel disagreement. No case reached unanimous "illicit" consensus. See Known limitations.
 
@@ -126,10 +128,10 @@ PyTorch + PyTorch Geometric (GraphSAGE/GAT), LangChain / LangGraph (`create_agen
 
 ## Known limitations
 
-- The hybrid score underperforms the GNN alone (see Results) — the combined-score step is implemented and runnable, not yet shown to add value at its current weighting.
-- GAT is not viable at its current precision on either dataset — included for comparison, not as a deployable option.
+- The hybrid score underperforms the GNN alone (see Results) — Benford's Law deviation is confirmed non-predictive of the ground-truth label on its own (standalone AUC-PR below the base rate), so its 30% weight actively hurts the combined score rather than adding complementary signal.
+- GAT's default-threshold precision (0.115) looks unusable but is substantially a threshold artifact — at its own F1-optimal threshold it reaches 0.552 precision (see Results). GraphSAGE still outperforms it at every threshold (higher AUC-PR, better F1), but "not viable" overstates the gap.
 - The Elliptic++ GraphSAGE run is undertrained: capped at 25 epochs by a memory constraint while validation AUC-PR was still climbing (0.36→0.71 in its last 5 logged epochs). Its 0.428 AUC-PR is a floor, not a converged result.
-- No operating threshold has been chosen against a false-positive budget — all metrics above are at the default 0.5 threshold. A real deployment picks a threshold based on how many flags a compliance team can review per day and reports metrics there.
+- Thresholds are F1-optimal (see Results), not chosen against a deployment false-positive budget — a real deployment picks a threshold based on how many flags a compliance team can actually review per day, which may differ from the F1-maximizing point.
 - The investigation agent has not demonstrated it can confirm fraud unanimously on its own — across 10 test cases, verdicts were either unanimous "licit" or a disagreement routed to human review, never unanimous "illicit." The panel is given aggregate wallet statistics, not real subgraph/neighbor context, which is the likely cause.
 - n=10 test cases is too small to draw statistical conclusions about panel reliability — it demonstrates the human-review mechanism triggers, not that the panel's judgment holds up at scale.
 - No prompt-injection or adversarial-input handling. Retrieved RAG text and case evidence flow into LLM prompts unsanitized — untested against manipulated input.

@@ -69,7 +69,7 @@ def main():
     pdata = prepare_pp_data()
     in_dim = pdata.x.shape[1]
     model = GraphSAGE(in_dim, hidden_dim=HIDDEN_DIM)
-    val_m, test_m, hist = train_gnn(model, pdata, epochs=EPOCHS, patience=PATIENCE)
+    val_m, test_m, hist, _ = train_gnn(model, pdata, epochs=EPOCHS, patience=PATIENCE)
     print(f"  test AUC-PR: {test_m.auc_pr:.4f} (sanity check vs Phase 3.5's 0.4283)")
 
     model.eval()

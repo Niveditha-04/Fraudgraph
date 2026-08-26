@@ -68,7 +68,7 @@ def main():
     print("=" * 70)
     torch.manual_seed(SEED)
     sage = GraphSAGE(in_dim, hidden_dim=WALLET_GRAPH_HIDDEN_DIM)
-    sage_val, sage_test, sage_hist = train_gnn(sage, pdata, epochs=WALLET_GRAPH_EPOCHS, patience=WALLET_GRAPH_PATIENCE)
+    sage_val, sage_test, sage_hist, _ = train_gnn(sage, pdata, epochs=WALLET_GRAPH_EPOCHS, patience=WALLET_GRAPH_PATIENCE)
     print(f"GraphSAGE (val):  {sage_val}")
     print(f"GraphSAGE (test): {sage_test}")
 
@@ -77,7 +77,7 @@ def main():
     print("=" * 70)
     torch.manual_seed(SEED)
     gat = GAT(in_dim, hidden_dim=WALLET_GRAPH_HIDDEN_DIM, heads=4)
-    gat_val, gat_test, gat_hist = train_gnn(gat, pdata, epochs=WALLET_GRAPH_EPOCHS, patience=WALLET_GRAPH_PATIENCE)
+    gat_val, gat_test, gat_hist, _ = train_gnn(gat, pdata, epochs=WALLET_GRAPH_EPOCHS, patience=WALLET_GRAPH_PATIENCE)
     print(f"GAT (val):  {gat_val}")
     print(f"GAT (test): {gat_test}")
 

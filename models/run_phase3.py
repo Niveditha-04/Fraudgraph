@@ -38,7 +38,7 @@ def main():
     print("=" * 70)
     torch.manual_seed(SEED)
     sage = GraphSAGE(in_dim)
-    sage_val, sage_test, sage_hist = train_gnn(sage, pdata, epochs=300, patience=30)
+    sage_val, sage_test, sage_hist, _ = train_gnn(sage, pdata, epochs=300, patience=30)
     print(f"GraphSAGE (val):  {sage_val}")
     print(f"GraphSAGE (test): {sage_test}")
 
@@ -47,7 +47,7 @@ def main():
     print("=" * 70)
     torch.manual_seed(SEED)
     gat = GAT(in_dim)
-    gat_val, gat_test, gat_hist = train_gnn(gat, pdata, epochs=300, patience=30)
+    gat_val, gat_test, gat_hist, _ = train_gnn(gat, pdata, epochs=300, patience=30)
     print(f"GAT (val):  {gat_val}")
     print(f"GAT (test): {gat_test}")
 

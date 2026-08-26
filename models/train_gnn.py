@@ -26,7 +26,7 @@ def train_gnn(
     patience: int = 30,
     device: str = "cpu",
     verbose: bool = True,
-) -> tuple[Metrics, Metrics, dict]:
+) -> tuple[Metrics, Metrics, dict, dict]:
     model = model.to(device)
     x = pdata.x.to(device)
     edge_index = pdata.edge_index_undirected.to(device)
@@ -93,7 +93,10 @@ def train_gnn(
         val_probs = F.softmax(out[val_mask], dim=1)[:, 1].cpu().numpy()
         test_probs = F.softmax(out[test_mask], dim=1)[:, 1].cpu().numpy()
 
-    val_metrics = compute_metrics(y[val_mask].cpu().numpy(), val_probs)
-    test_metrics = compute_metrics(y[test_mask].cpu().numpy(), test_probs)
+    val_y_np = y[val_mask].cpu().numpy()
+    test_y_np = y[test_mask].cpu().numpy()
+    val_metrics = compute_metrics(val_y_np, val_probs)
+    test_metrics = compute_metrics(test_y_np, test_probs)
 
-    return val_metrics, test_metrics, history
+    raw = {"val_probs": val_probs, "val_y": val_y_np, "test_probs": test_probs, "test_y": test_y_np}
+    return val_metrics, test_metrics, history, raw
