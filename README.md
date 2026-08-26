@@ -103,7 +103,9 @@ python -m models.run_phase3
 # Phase 5: build the RAG vector store (needs the PDFs in rag/documents/)
 python -m rag.build_vectorstore
 
-# Phase 6: run the investigation agent (needs ANTHROPIC_API_KEY in .env)
+# Phase 6: run the investigation agent (needs ANTHROPIC_API_KEY in .env;
+# optionally LANGCHAIN_TRACING_V2=true, LANGCHAIN_API_KEY, LANGCHAIN_PROJECT
+# for LangSmith tracing)
 python -m agent.run_phase6
 
 # Phase 7: local dashboard with a live FastAPI backend

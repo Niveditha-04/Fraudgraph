@@ -121,7 +121,12 @@ def draft_memo_node(state: InvestigationState) -> dict:
     # claude-sonnet-5 has deprecated the `temperature` parameter entirely
     # (confirmed via a live 400 error, not assumed) -- omit it here rather
     # than pin a value the model no longer accepts.
-    llm = ChatAnthropic(model=MEMO_MODEL, max_tokens=800)
+    # max_tokens=800 was too low: LangSmith traces showed all 10 memo calls
+    # hitting exactly 800 output tokens, and the saved memo text confirmed
+    # every one was truncated mid-sentence. 1500 still wasn't enough for the
+    # two longest memos (also confirmed truncated mid-sentence). Raised again
+    # with more margin.
+    llm = ChatAnthropic(model=MEMO_MODEL, max_tokens=2500)
     persona_summary = "\n".join(
         f"- {r['persona']}: {r['verdict']} (confidence {r['confidence']:.2f}) -- {r['reasoning']}"
         for r in state["persona_results"]

@@ -7,6 +7,7 @@ independent and already correct -- rather than re-running the whole panel
 and paying for 30 more persona calls that would produce the same result.
 """
 import json
+import sys
 
 from dotenv import load_dotenv
 
@@ -17,11 +18,12 @@ from agent.graph import draft_memo_node, rag_lookup_node
 RESULTS_PATH = "agent/results/phase6_results.json"
 
 
-def main():
+def main(case_ids: list[int] | None = None):
     with open(RESULTS_PATH) as f:
         cases = json.load(f)
 
-    for c in cases:
+    targets = [c for c in cases if case_ids is None or c["case_id"] in case_ids]
+    for c in targets:
         state = {
             "case_id": c["case_id"],
             "evidence_summary": c["evidence_summary"],
@@ -39,10 +41,15 @@ def main():
         c["memo"] = result["memo"]
         print(f"case {c['case_id']}: memo refreshed ({len(result['memo'])} chars)")
 
-    with open(RESULTS_PATH, "w") as f:
-        json.dump(cases, f, indent=2)
+        # write after every case, not just at the end -- an interruption
+        # partway through (network stall, machine sleep) shouldn't lose
+        # already-completed work.
+        with open(RESULTS_PATH, "w") as f:
+            json.dump(cases, f, indent=2)
+
     print(f"\nsaved updated memos to {RESULTS_PATH}")
 
 
 if __name__ == "__main__":
-    main()
+    ids = [int(x) for x in sys.argv[1:]] or None
+    main(ids)

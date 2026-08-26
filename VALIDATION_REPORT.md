@@ -109,6 +109,8 @@ Base Elliptic's 165 features are anonymized by the dataset's own documentation, 
 
 **Status: PASS against the stated gate** (≥10 cases, mix of ground truth, human-review branch triggers). That's narrower than "the agent works as designed." No case reached unanimous "illicit" across all 10 — verdicts were either unanimous "licit" or a disagreement. As evaluated, the panel escalates reliably but has not demonstrated it can confirm fraud on its own. The panel is given aggregate wallet statistics, not subgraph structure, and many flagged wallets are single-transaction wallets — thin evidence, and the likely cause, though that's a diagnosis rather than a fix. n=10 is too small to draw statistical conclusions about panel reliability at scale; it demonstrates the human-review mechanism works.
 
+The memo-drafting call's `max_tokens` was set too low (800): LangSmith traces showed every call consuming exactly 800 output tokens, and the saved memo text confirmed each memo was cut off mid-sentence. Raised to 2500; all 10 memos now end on a complete sentence.
+
 ## Phase 7 — Dashboard and deployment
 
 **Required:** deployed URL loads and shows a working example end-to-end from a fresh browser session.
@@ -125,7 +127,11 @@ This report + `README.md` + `DATASET.md` + `.github/workflows/tests.yml` (12 tes
 
 ## LLM token usage / cost
 
-No token/cost tracking is instrumented (no LangSmith, no per-call usage logging). Estimate from call counts and typical message sizes: ~104 LLM calls across the build (71 persona calls on Haiku 4.5, ~360 input/~120 output tokens each; 33 memo-drafting calls on Sonnet, ~1,400 input/~750 output tokens each). At Haiku 4.5's pricing ($1/$5 per million input/output tokens) and Sonnet's pricing (~$2-3/$10-15 per million depending on snapshot), total cost is roughly $0.50-0.60. LangSmith tracing would replace this estimate with exact figures.
+LangSmith tracing is enabled (`LANGCHAIN_TRACING_V2=true`, project `Fraudgraph`) and covers all calls made after it was wired in, including one full Phase 6 gate re-run and the memo-drafting fix below.
+
+**Measured (LangSmith, `run_type=llm` only — excludes LangGraph's node/chain-level wrapper traces to avoid double-counting):** 41 LLM calls, 58,102 input tokens, 14,773 output tokens, $0.1961 total. 10 calls on `claude-sonnet-5` (24,127 input / 8,000 output tokens, $0.1283) and 31 calls on `claude-haiku-4-5-20251001` (33,975 input / 6,773 output tokens, $0.0678).
+
+This covers only the traced portion of the build (one full Phase 6 run plus setup calls), not the earlier untraced runs (initial Phase 6 gate runs, the 3-case smoke test). Total cost across the whole build, including untraced calls, is estimated at $0.50-0.70.
 
 ## Known gaps not addressed in this repo
 
@@ -134,4 +140,4 @@ No token/cost tracking is instrumented (no LangSmith, no per-call usage logging)
 - Agent evaluation is n=10; not large enough for statistical conclusions about panel reliability.
 - No prompt-injection or adversarial-input testing — retrieved RAG text and case evidence flow into LLM prompts unsanitized.
 - Elliptic++ GraphSAGE has not been trained to convergence (see Phase 3.5).
-- No automated RAG evaluation harness (e.g. Ragas) — Phase 5's check is 5 manually-read queries.
+- No automated RAG evaluation harness — Phase 5's check is 5 manually-read queries. Ragas was attempted; both the latest release (0.4.3) and the last version known to work with current LangChain (0.3.9) fail to import, because ragas unconditionally imports `langchain_community.chat_models.vertexai`, a module removed from current `langchain-community` (tracked upstream in ragas issues #2745/#2753). Not resolved by pinning an older ragas version, since the incompatibility is with this project's `langchain-community` version, not ragas's.

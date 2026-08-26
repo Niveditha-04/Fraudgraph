@@ -86,7 +86,7 @@
     "ground_truth": "licit",
     "hybrid_score": 0.8436945978813046,
     "status": "human_resolved",
-    "consensus_verdict": "licit",
+    "consensus_verdict": "uncertain",
     "triggered_human_review": true
   }
 ]
