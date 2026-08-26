@@ -52,8 +52,16 @@
 </div>
 
 <script>
+// Cache-busting token: one per page load. The CDN in front of this static
+// site has no Cache-Control header on the data files, so different edge
+// locations can serve different cached ages of cases.json vs case_N.json
+// (a real bug hit in production: sidebar and detail panel showed different
+// case sets after a data update). Appending a per-load token to every fetch
+// guarantees a fresh, uncached request from origin every time the page loads.
+const CACHE_BUST = Date.now();
+
 async function loadCases() {
-  const res = await fetch('data/cases.json');
+  const res = await fetch(`data/cases.json?v=${CACHE_BUST}`);
   const cases = await res.json();
   const list = document.getElementById('case-list');
   list.innerHTML = '';
@@ -80,7 +88,7 @@ async function selectCase(caseId) {
   document.querySelectorAll('.case-item').forEach(el => el.classList.remove('active'));
   document.getElementById(`case-item-${caseId}`)?.classList.add('active');
 
-  const res = await fetch(`data/case_${caseId}.json`);
+  const res = await fetch(`data/case_${caseId}.json?v=${CACHE_BUST}`);
   const c = await res.json();
   const detail = document.getElementById('detail');
 
