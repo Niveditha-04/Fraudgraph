@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-26 (3)
+
+- Added `models/generate_report_charts.py`, generating `assets/model_comparison.png` and `assets/hybrid_score_by_case.png` from the committed result files. Added `assets/dashboard_screenshot.png` (headless Chrome capture of the live deployment). All three embedded in README.md and VALIDATION_REPORT.md.
+- Replaced the "distribution drift" hedge for the Phase 3 val/test AUC-PR gap with the specific cause: per-timestep illicit counts in the test window range from 2 (t46) to 239 (t42), a ~120x swing, so aggregate AUC-PR mixes near-empty and dense timesteps.
+- Added a named example to Phase 6's results: case 2 (wallet #572167), a confirmed-illicit wallet the panel unanimously classified as licit at 0.88-0.92 confidence — a concrete instance of the GNN's 0.428 AUC-PR producing a false negative.
+- Quantified the "unknown outnumbers licit" claim in Phase 2: ratio ranges 1.4x-8.0x across all 49 time steps, averaging 4.3x.
+
 ## 2026-08-26 (2)
 
 - Enabled LangSmith tracing (`LANGCHAIN_TRACING_V2`, project `Fraudgraph`). Replaced the estimated LLM token/cost figure in VALIDATION_REPORT.md with measured numbers from a traced Phase 6 run.

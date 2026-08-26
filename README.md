@@ -8,6 +8,8 @@ A two-layer fraud detection system on the Elliptic Bitcoin transaction graph: a 
 
 Gate-by-gate results: [VALIDATION_REPORT.md](VALIDATION_REPORT.md). Dataset provenance: [DATASET.md](DATASET.md).
 
+![Dashboard screenshot](assets/dashboard_screenshot.png)
+
 ## The problem
 
 Money laundering and coordinated fraud rings move money across *networks* of accounts specifically so no single transaction looks suspicious on its own. Row-by-row transaction monitoring can't see this — the pattern only exists at the network level. Graph-based AML analytics is established industry practice (FATF calls for it explicitly); the newer part is combining it with an LLM investigation layer on top, a combination first published (as "FLAG") at KDD 2025.
@@ -50,6 +52,8 @@ Metrics are precision / recall / AUC-PR, never accuracy — illicit is 2-10% of 
 | GraphSAGE | 0.673 | 0.539 | **0.542** |
 | GAT | 0.115 | 0.753 | 0.372 — not viable at this precision (~88% false-alarm rate); shown for comparison, not as a deployable option |
 
+![Model comparison bar chart](assets/model_comparison.png)
+
 **Elliptic++ (822,942 wallet nodes, optional scale extension):**
 
 | Model | Precision | Recall | AUC-PR |
@@ -73,6 +77,10 @@ GraphSAGE beats the non-graph baseline by ~2.5x on both datasets — the graph s
 The hybrid score underperforms the GNN alone. Benford's near-zero correlation with the GNN score means blending it in adds noise rather than complementary signal at this weighting. See `models/evaluate_hybrid_score.py`.
 
 **Investigation agent:** run on 10 test cases (3 illicit / 7 licit ground truth) — 6 of 10 triggered human review on panel disagreement. No case reached unanimous "illicit" consensus. See Known limitations.
+
+![Hybrid score by case, colored by ground truth](assets/hybrid_score_by_case.png)
+
+A well-calibrated score would show illicit (orange) cases clustered high and licit (blue) cases clustered low. The overlap here is real: case 2 is a confirmed-illicit wallet the panel unanimously classified as licit at 0.88-0.92 confidence — see VALIDATION_REPORT.md for detail.
 
 ## Repository layout
 

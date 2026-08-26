@@ -26,6 +26,10 @@ Every phase gate from the build guide: what it required, what was measured, whet
 
 **Required:** printed class imbalance shows illicit ≈2% of labeled nodes.
 **Result:** Illicit is 2.2% of all 203,769 nodes, matching the brief's "~2%" figure — but 9.76% of the 46,564 *labeled* nodes. The gate's wording conflates the two figures. Phase 3's loss weighting uses the labeled-only ratio (9.76%), not 2%.
+
+Unlabeled ("unknown") transactions outnumber labeled-licit ones in every one of the 49 time steps — the ratio ranges 1.4x to 8.0x, averaging 4.3x (see the bottom panel of the chart below). This is why the labeled-only ratio, not the all-nodes ratio, is the correct one for loss weighting: the model never sees unlabeled nodes in its loss regardless of how numerous they are.
+
+![Illicit transaction count per time step](data/eda_outputs/illicit_per_timestep.png)
 **Status: PASS**
 
 ## Phase 3 — GNN model training (base Elliptic, 203,769 nodes)
@@ -38,7 +42,11 @@ Every phase gate from the build guide: what it required, what was measured, whet
 | GraphSAGE | 0.673 | 0.539 | **0.5424** |
 | GAT | 0.115 | 0.753 | 0.3716 |
 
-**Status: PASS** — GraphSAGE beats the baseline by ~2.5x. GraphSAGE's val AUC-PR (0.849) is well above its test AUC-PR (0.542), consistent with distribution drift between the validation window (t35-39) and the more distant test window (t40-49).
+![Model comparison bar chart](assets/model_comparison.png)
+
+**Status: PASS** — GraphSAGE beats the baseline by ~2.5x. GraphSAGE's val AUC-PR (0.849) is well above its test AUC-PR (0.542).
+
+This is partly explained by extreme per-timestep volatility in illicit transaction counts, not a smooth distribution shift: within the test window (t40-49), timestep 46 has only 2 illicit transactions and timestep 45 has 5, while timestep 42 has 239 — a ~120x range. AUC-PR computed across the whole test window mixes near-empty and dense timesteps rather than reflecting stable performance on a uniform distribution.
 
 ## Phase 3.5 — Elliptic++ scale extension (822,942 wallet nodes, optional)
 
@@ -106,6 +114,10 @@ Base Elliptic's 165 features are anonymized by the dataset's own documentation, 
 | 7 | licit | 0.999 | uncertain, uncertain, uncertain | human_resolved | uncertain |
 | 8 | illicit | 0.867 | uncertain, licit, uncertain | human_resolved | uncertain |
 | 9 | licit | 0.844 | licit, licit, uncertain | human_resolved | licit |
+
+![Hybrid score by case, colored by ground truth](assets/hybrid_score_by_case.png)
+
+Case 2 (wallet #572167) is a genuine illicit wallet the panel unanimously and confidently classified as licit — GNN score 0.002, all three personas at 0.88-0.92 confidence, auto-finalized with no human review triggered. The wallet's surface pattern (7 inbound transactions, 0 outbound) looks like ordinary passive receiving activity; underneath it's confirmed fraud. This is a concrete instance of the GNN's 0.428 test AUC-PR producing a real false negative, not just a number on its own.
 
 **Status: PASS against the stated gate** (≥10 cases, mix of ground truth, human-review branch triggers). That's narrower than "the agent works as designed." No case reached unanimous "illicit" across all 10 — verdicts were either unanimous "licit" or a disagreement. As evaluated, the panel escalates reliably but has not demonstrated it can confirm fraud on its own. The panel is given aggregate wallet statistics, not subgraph structure, and many flagged wallets are single-transaction wallets — thin evidence, and the likely cause, though that's a diagnosis rather than a fix. n=10 is too small to draw statistical conclusions about panel reliability at scale; it demonstrates the human-review mechanism works.
 
